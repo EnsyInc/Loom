@@ -6,13 +6,17 @@ dockerized, Microsoft SSO for auth.
 
 ## Core concepts
 
-- **Organization** — the root tenant. Owns templates and members.
-- **Project** — a container for work items. Adopts templates from the org level.
+Loom is single-tenant: one deployment serves one team, and there is no
+organization/tenant concept. Templates live at the app level, and projects are
+the top-level container for work.
+
+- **Project** — a container for work items. Adopts templates from the
+  app-level template library.
 - **Work item** — an instance of a type, holding a `status`, a `fields` blob
   (validated against its type's field definitions), and typed relationships
   to other work items (including items in other projects).
 
-## Templates (root-level, org-owned)
+## Templates (app-level)
 
 Three kinds of template, each **copied into a project on adoption** rather than
 referenced live (copy-on-use with lineage back to the source template/version).
@@ -31,7 +35,8 @@ the whole template, and protects live projects from a later template edit.
 
 ## Auth
 
-- Microsoft Entra ID (Azure AD) app registration, OAuth2/OIDC.
+- Microsoft Entra ID (Azure AD) app registration, OAuth2/OIDC. Users are
+  identified by their Entra ID identity; there is no organization to belong to.
 - Multi-user from the start; single-user today, team later — permissions
   model (who can edit templates vs. just work items) should exist before
   more people are added.

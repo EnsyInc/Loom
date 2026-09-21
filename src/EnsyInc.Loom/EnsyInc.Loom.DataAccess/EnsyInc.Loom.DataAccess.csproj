@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="EnsyNet.DataAccess.EntityFramework" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\EnsyInc.Loom.Core\EnsyInc.Loom.Core.csproj" />
+  </ItemGroup>
+</Project>

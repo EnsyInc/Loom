@@ -6,4 +6,7 @@
     <File Path="NuGet.Config" />
   </Folder>
   <Project Path="EnsyInc.Loom.Api/EnsyInc.Loom.Api.csproj" />
+  <Project Path="EnsyInc.Loom.Core/EnsyInc.Loom.Core.csproj" Id="3549c03c-75b9-4659-8941-551bdb44ccb4" />
+  <Project Path="EnsyInc.Loom.DataAccess/EnsyInc.Loom.DataAccess.csproj" Id="6800d4f2-8637-4b73-989d-9bb8e879296e" />
+  <Project Path="EnsyInc.Loom.Migrations/EnsyInc.Loom.Migrations.csproj" Id="8357adca-f523-422f-94ed-1512ca452752" />
 </Solution>

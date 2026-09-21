@@ -2,5 +2,14 @@
   <ItemGroup>
     <!-- Production Dependencies -->
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.11" />
+    <PackageVersion Include="EnsyNet.Core" Version="10.0.2" />
+    <PackageVersion Include="EnsyNet.DataAccess.Abstractions" Version="10.0.2" />
+    <PackageVersion Include="EnsyNet.DataAccess.EntityFramework" Version="10.0.2" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.10" />
+    <PackageVersion Include="NLog.Extensions.Logging" Version="6.1.4" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.10" />
   </ItemGroup>
+
+
 </Project>
