@@ -1,23 +1,20 @@
-var builder = WebApplication.CreateBuilder(args);
+using EnsyInc.Loom.Api.Bootstrap;
+using EnsyInc.Loom.Api.Middleware;
 
-// Add services to the container.
+using FluentValidation;
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+using Microsoft.AspNetCore.Mvc;
 
-var app = builder.Build();
+var builder = WebApplication.CreateBuilder(args)
+    .InitializeApplication();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+builder.Services.Configure<MvcOptions>(opt =>
+    opt.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true);
 
-app.UseHttpsRedirection();
+var app = builder.Build()
+    .ConfigureApplication();
 
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();
+app.RunApplication();
