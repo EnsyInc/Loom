@@ -1,0 +1,19 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <Authors>EnsyFane</Authors>
+    <Company>EnsyInc</Company>
+    <RepositoryUrl>https://github.com/EnsyInc/Loom</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <GenerateAssemblyInfo>True</GenerateAssemblyInfo>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <WarningLevel>9999</WarningLevel>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+    <NoWarn>1701;1702;CS1591</NoWarn>
+  </PropertyGroup>
+</Project>

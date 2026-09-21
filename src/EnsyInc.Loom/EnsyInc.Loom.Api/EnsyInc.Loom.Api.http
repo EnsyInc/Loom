@@ -1,0 +1,6 @@
+@EnsyInc.Loom.Api_HostAddress = http://localhost:5029
+
+GET {{EnsyInc.Loom.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
