@@ -3,4 +3,7 @@
     <ProjectReference Include="..\EnsyInc.Loom.Core\EnsyInc.Loom.Core.csproj" />
     <ProjectReference Include="..\EnsyInc.Loom.DataAccess\EnsyInc.Loom.DataAccess.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="EnsyInc.Loom.UnitTests" />
+  </ItemGroup>
 </Project>

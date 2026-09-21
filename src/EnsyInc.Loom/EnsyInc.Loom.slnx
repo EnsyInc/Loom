@@ -7,6 +7,7 @@
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="EnsyInc.Loom.ServiceTests/EnsyInc.Loom.ServiceTests.csproj" Id="911ec8be-6031-494e-a252-6039affc54a1" />
+    <Project Path="EnsyInc.Loom.UnitTests/EnsyInc.Loom.UnitTests.csproj" Id="76655336-1302-4602-8fbd-98f3a0483434" />
   </Folder>
   <Project Path="EnsyInc.Loom.Api/EnsyInc.Loom.Api.csproj" />
   <Project Path="EnsyInc.Loom.Core/EnsyInc.Loom.Core.csproj" Id="3549c03c-75b9-4659-8941-551bdb44ccb4" />
