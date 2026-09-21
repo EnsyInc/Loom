@@ -1,0 +1,229 @@
+name: ci
+run-name: EnsyInc.Loom CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  SLN_PATH: src/EnsyInc.Loom/EnsyInc.Loom.slnx
+  PACKAGES_PROPS_PATH: src/EnsyInc.Loom/Directory.Packages.props
+  DOTNET_VERSION: 10.0.x
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          cache: true
+          cache-dependency-path: ${{ env.PACKAGES_PROPS_PATH }}
+
+      - name: Build solution
+        run: dotnet build "$SLN_PATH" -c Release
+
+  unit-tests:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          cache: true
+          cache-dependency-path: ${{ env.PACKAGES_PROPS_PATH }}
+
+      - name: Install dotnet-coverage
+        run: dotnet tool install --global dotnet-coverage
+
+      - name: Run unit tests with coverage
+        run: |
+          mkdir -p ./test-results
+          dotnet-coverage collect -f xml -o ./test-results/unit-coverage.xml -- \
+            dotnet test src/EnsyInc.Loom/EnsyInc.Loom.UnitTests/EnsyInc.Loom.UnitTests.csproj -c Release
+
+      - name: Upload unit test coverage
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-unit
+          path: ./test-results/unit-coverage.xml
+          retention-days: 1
+
+  service-tests:
+    runs-on: ubuntu-latest
+    needs: [build]
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: Password1!
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P Password1! -Q 'SELECT 1' || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 20s
+    env:
+      Db__ConnectionString: "Server=localhost;Database=Loom;User Id=sa;Password=Password1!;TrustServerCertificate=True;"
+      ApiBaseUrl: "https://localhost:7088"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          cache: true
+          cache-dependency-path: ${{ env.PACKAGES_PROPS_PATH }}
+
+      - name: Install dotnet-coverage
+        run: dotnet tool install --global dotnet-coverage
+
+      - name: Apply database migrations with coverage collection
+        run: |
+          mkdir -p ./test-results
+          dotnet-coverage collect -f xml -o ./test-results/migrations-coverage.xml -- \
+            dotnet run --project src/EnsyInc.Loom/EnsyInc.Loom.Migrations/EnsyInc.Loom.Migrations.csproj -c Release
+
+      - name: Upload migrations coverage
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-migrations
+          path: ./test-results/migrations-coverage.xml
+          retention-days: 1
+
+      - name: Build Api
+        run: dotnet build src/EnsyInc.Loom/EnsyInc.Loom.Api/EnsyInc.Loom.Api.csproj -c Release
+
+      - name: Start Api in background with coverage collection
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ASPNETCORE_URLS: "https://localhost:7088;http://localhost:5029"
+        run: |
+          mkdir -p ./test-results
+          cd src/EnsyInc.Loom/EnsyInc.Loom.Api/bin/Release/net10.0
+          nohup dotnet-coverage collect --session-id ServiceTestsSession -f xml -o "$GITHUB_WORKSPACE/test-results/service-coverage.xml" -- \
+            dotnet EnsyInc.Loom.Api.dll > "$GITHUB_WORKSPACE/api.log" 2>&1 &
+          echo $! > "$GITHUB_WORKSPACE/api.pid"
+
+      - name: Wait for Api to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if curl -ks -o /dev/null -w "%{http_code}" https://localhost:7088/swagger/v1/swagger.json | grep -q 200; then
+              echo "Api is ready"
+              exit 0
+            fi
+            echo "Waiting for Api... ($i/30)"
+            sleep 2
+          done
+          echo "Api did not become ready in time"
+          cat api.log || true
+          exit 1
+
+      - name: Run service tests
+        run: dotnet test src/EnsyInc.Loom/EnsyInc.Loom.ServiceTests/EnsyInc.Loom.ServiceTests.csproj -c Release
+
+      - name: Stop Api and flush coverage
+        run: |
+          dotnet-coverage shutdown ServiceTestsSession
+          for i in $(seq 1 30); do
+            if ! kill -0 "$(cat api.pid)" 2>/dev/null; then
+              break
+            fi
+            echo "Waiting for coverage session to close... ($i/30)"
+            sleep 1
+          done
+          if [ -f ./test-results/service-coverage.xml ]; then
+            echo "Coverage report written"
+            exit 0
+          fi
+          echo "Coverage report was not written in time"
+          cat api.log || true
+          exit 1
+
+      - name: Upload service test coverage
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-service
+          path: ./test-results/service-coverage.xml
+          retention-days: 1
+
+  sonar:
+    runs-on: ubuntu-latest
+    needs: [unit-tests, service-tests]
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          cache: true
+          cache-dependency-path: ${{ env.PACKAGES_PROPS_PATH }}
+
+      - name: Setup Java 17.0 (needed for Sonar)
+        uses: actions/setup-java@v5
+        with:
+          distribution: "microsoft"
+          java-version: "17.0"
+
+      - name: Download unit test coverage
+        uses: actions/download-artifact@v8
+        with:
+          name: coverage-unit
+          path: ./test-results
+
+      - name: Download service test coverage
+        uses: actions/download-artifact@v8
+        with:
+          name: coverage-service
+          path: ./test-results
+
+      - name: Download migrations coverage
+        uses: actions/download-artifact@v8
+        with:
+          name: coverage-migrations
+          path: ./test-results
+
+      - name: Install dotnet-sonarscanner
+        run: dotnet tool install --global dotnet-sonarscanner
+
+      - name: Start Sonar analysis
+        run: >
+          dotnet sonarscanner begin
+          -o:"ensyinc"
+          -k:"EnsyInc_Loom"
+          -n:"Loom"
+          -d:sonar.host.url="https://sonarcloud.io"
+          -d:sonar.token="$SONAR_TOKEN"
+          -d:sonar.cs.vscoveragexml.reportsPaths="./test-results/unit-coverage.xml,./test-results/service-coverage.xml,./test-results/migrations-coverage.xml"
+          -d:sonar.coverage.exclusions="**/*Tests*/**"
+          -d:sonar.exclusions="**/*.slnx,**/Migrations/*.cs,.github/**"
+
+      - name: Build solution
+        run: dotnet build "$SLN_PATH" -c Release
+
+      - name: End Sonar analysis
+        run: dotnet sonarscanner end -d:sonar.token="$SONAR_TOKEN"
