@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\EnsyInc.Loom.Core\EnsyInc.Loom.Core.csproj" />
+    <ProjectReference Include="..\EnsyInc.Loom.DataAccess\EnsyInc.Loom.DataAccess.csproj" />
+  </ItemGroup>
+</Project>
