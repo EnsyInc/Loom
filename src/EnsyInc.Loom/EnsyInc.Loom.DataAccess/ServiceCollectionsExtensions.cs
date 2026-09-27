@@ -25,6 +25,7 @@ public static class ServiceCollectionsExtensions
 
     private static IServiceCollection AddRepos(this IServiceCollection services)
         => services
+            .AddScoped<IUnitOfWork, UnitOfWork>()
             .AddScoped<IProjectRepo, ProjectRepo>()
             .AddScoped<ITplWorkItemStatusRepo, TplWorkItemStatusRepo>()
             .AddScoped<ITplWorkItemRepo, TplWorkItemRepo>()

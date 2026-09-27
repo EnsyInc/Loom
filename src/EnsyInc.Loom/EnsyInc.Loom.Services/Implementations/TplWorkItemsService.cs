@@ -14,7 +14,8 @@ internal sealed class TplWorkItemsService(
     ITplWorkItemRepo typeRepo,
     IWorkItemTypeStatusRepo typeStatusRepo,
     IProjectWorkItemTypeRepo projectTypeRepo,
-    IStatusTransitionRepo transitionRepo) : ITplWorkItemsService
+    IStatusTransitionRepo transitionRepo,
+    IUnitOfWork unitOfWork) : ITplWorkItemsService
 {
     public async Task<Result<IEnumerable<TplWorkItem>>> ListTypes(CancellationToken ct)
     {
@@ -117,48 +118,47 @@ internal sealed class TplWorkItemsService(
         return Result.Ok(existing.Data with { InitialStatusId = statusId, UpdatedAt = DateTime.UtcNow });
     }
 
-    public async Task<Result> SoftDeleteType(Guid id, CancellationToken ct)
-    {
-        var usages = await projectTypeRepo.GetManyByExpression(l => l.TypeId == id, ct);
-        if (usages.HasError)
+    public Task<Result> SoftDeleteType(Guid id, CancellationToken ct)
+        => unitOfWork.RunInTransaction(async () =>
         {
-            return Result.FromError(new UnexpectedError());
-        }
-
-        if (usages.Data.Any())
-        {
-            return Result.FromError(new TplWorkItemInUseError());
-        }
-
-        var result = await typeRepo.SoftDelete(id, ct);
-
-        if (result.HasError)
-        {
-            return result.Error switch
+            var usages = await projectTypeRepo.GetManyByExpression(l => l.TypeId == id, ct);
+            if (usages.HasError)
             {
-                DeleteOperationFailedError => Result.Ok(),
-                _ => Result.FromError(new UnexpectedError()),
-            };
-        }
+                return Result.FromError(new UnexpectedError());
+            }
 
-        // Best-effort, non-atomic across the TplWorkItem, WorkItemTypeStatus, and StatusTransition
-        // repos: if either of these fails after the type delete above already succeeded, its
-        // status/transition links survive, which would incorrectly keep blocking those statuses
-        // from being deleted as still "in use".
-        var transitionsResult = await transitionRepo.SoftDelete(t => t.TypeId == id, ct);
-        if (transitionsResult.HasError && transitionsResult.Error is not BulkDeleteOperationFailedError)
-        {
-            return Result.FromError(new UnexpectedError());
-        }
+            if (usages.Data.Any())
+            {
+                return Result.FromError(new TplWorkItemInUseError());
+            }
 
-        var statusLinksResult = await typeStatusRepo.SoftDelete(l => l.TypeId == id, ct);
-        if (statusLinksResult.HasError && statusLinksResult.Error is not BulkDeleteOperationFailedError)
-        {
-            return Result.FromError(new UnexpectedError());
-        }
+            var result = await typeRepo.SoftDelete(id, ct);
 
-        return Result.Ok();
-    }
+            if (result.HasError)
+            {
+                return result.Error switch
+                {
+                    DeleteOperationFailedError => Result.Ok(),
+                    _ => Result.FromError(new UnexpectedError()),
+                };
+            }
+
+            // Also removes the type's status/transition links, so a status it used isn't left
+            // permanently blocked from deletion by a link to a type that no longer exists.
+            var transitionsResult = await transitionRepo.SoftDelete(t => t.TypeId == id, ct);
+            if (transitionsResult.HasError && transitionsResult.Error is not BulkDeleteOperationFailedError)
+            {
+                return Result.FromError(new UnexpectedError());
+            }
+
+            var statusLinksResult = await typeStatusRepo.SoftDelete(l => l.TypeId == id, ct);
+            if (statusLinksResult.HasError && statusLinksResult.Error is not BulkDeleteOperationFailedError)
+            {
+                return Result.FromError(new UnexpectedError());
+            }
+
+            return Result.Ok();
+        }, ct);
 
     private async Task<Result<TplWorkItem>> BuildNameAlreadyExistsError(string name, CancellationToken ct)
     {

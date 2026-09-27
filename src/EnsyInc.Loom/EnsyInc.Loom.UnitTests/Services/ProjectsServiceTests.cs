@@ -16,11 +16,15 @@ public sealed class ProjectsServiceTests
 {
     private readonly Mock<IProjectRepo> _projectRepoMock = new();
     private readonly Mock<IProjectWorkItemTypeRepo> _projectTypeRepoMock = new();
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
     private readonly ProjectsService _sut;
 
     public ProjectsServiceTests()
     {
-        _sut = new ProjectsService(_projectRepoMock.Object, _projectTypeRepoMock.Object);
+        _unitOfWorkMock.Setup(u => u.RunInTransaction(It.IsAny<Func<Task<Result>>>(), It.IsAny<CancellationToken>()))
+            .Returns((Func<Task<Result>> operation, CancellationToken _) => operation());
+
+        _sut = new ProjectsService(_projectRepoMock.Object, _projectTypeRepoMock.Object, _unitOfWorkMock.Object);
     }
 
     private static ProjectEntity CreateEntity(Guid? id = null, string name = "Roadmap")
