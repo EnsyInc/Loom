@@ -24,154 +24,119 @@ Two design choices worth calling out before the diagram:
 ```mermaid
 %%{init: {'theme': 'dark'}}%%
 erDiagram
-    PROJECT |o--o{ WORKITEMTYPE : "adopts (instances)"
-    PROJECT |o--o{ STATUSWORKFLOW : "adopts (instances)"
-    PROJECT |o--o{ RELATIONSHIPTYPE : "adopts (instances)"
-    PROJECT ||--o{ WORKITEM : contains
-    PROJECT ||--o{ SPRINT : schedules
-    PROJECT |o--o{ SAVEDQUERY : "scopes"
-
-    WORKITEMTYPE |o--o{ WORKITEMTYPE : "copied from"
-    WORKITEMTYPE ||--o{ FIELDDEFINITION : has
-    WORKITEMTYPE ||--o{ WORKITEM : "instances of"
-
-    STATUSWORKFLOW |o--o{ STATUSWORKFLOW : "copied from"
-    STATUSWORKFLOW ||--o{ WORKITEMTYPE : "drives"
-    STATUSWORKFLOW ||--o{ STATUS : has
-    STATUSWORKFLOW ||--o{ STATUSTRANSITION : has
-    STATUS ||--o{ WORKITEM : "current status of"
-    STATUS ||--o{ STATUSTRANSITION : "from"
-    STATUS ||--o{ STATUSTRANSITION : "to"
-
-    RELATIONSHIPTYPE |o--o{ RELATIONSHIPTYPE : "copied from"
-    RELATIONSHIPTYPE ||--o{ RELATIONSHIP : types
-    RELATIONSHIPTYPE ||--o{ RELATIONSHIPTYPERULE : "allowed pairs"
-    WORKITEMTYPE ||--o{ RELATIONSHIPTYPERULE : "allowed as source"
-    WORKITEMTYPE ||--o{ RELATIONSHIPTYPERULE : "allowed as target"
-
-    WORKITEM ||--o{ RELATIONSHIP : "source of"
-    WORKITEM ||--o{ RELATIONSHIP : "target of"
-    USER |o--o{ WORKITEM : "assigned to"
-
-    WORKITEM ||--o{ WORKITEMSTATUSCHANGE : "status history"
-    STATUS ||--o{ WORKITEMSTATUSCHANGE : "entered"
-    USER ||--o{ WORKITEMSTATUSCHANGE : "changed by"
-
-    SPRINT ||--o{ SPRINTITEM : includes
-    WORKITEM ||--o{ SPRINTITEM : "scheduled in"
-
-    USER ||--o{ SAVEDQUERY : owns
-
-    USER {
+    User {
         uuid id PK
         string entraObjectId "unique, Entra ID oid claim"
-        string name
+        string firstName
+        string lastName
         string email
     }
-    PROJECT {
+    Project {
         uuid id PK
         string name
+        string key
+        int nextItemNumber
     }
-    WORKITEMTYPE {
+    TplWorkItem {
         uuid id PK
-        uuid projectId FK "null for templates"
-        uuid sourceTemplateId FK "null for templates"
-        uuid workflowId FK
+        uuid initialStatus FK
         string name
-        string icon
+        string IconUrl
     }
-    FIELDDEFINITION {
+    TplWorkItemField {
         uuid id PK
-        uuid workItemTypeId FK
-        string key "immutable once created"
+        string type
+        string key
         string label
-        string dataType
+        uuid TplWorkItemId FK
         bool required
-        json options "enum values, nullable"
-        json defaultValue "nullable"
-        int sortOrder
+        json defaultValue
     }
-    STATUSWORKFLOW {
+    TplWorkItemFieldOption {
         uuid id PK
-        uuid projectId FK "null for templates"
-        uuid sourceTemplateId FK "null for templates"
+        uuid field FK
+        string value
+        string label
+    }
+    TplWorkItemStatus {
+        uuid id PK
         string name
+        string category "ToDo|InProgress|Done"
     }
-    STATUS {
+    WorkItem {
         uuid id PK
-        uuid workflowId FK
-        string name
-        string color
-        bool isInitial "exactly one per workflow"
-        bool isTerminal
-        int sortOrder
-    }
-    STATUSTRANSITION {
-        uuid id PK
-        uuid workflowId FK
-        uuid fromStatusId FK
-        uuid toStatusId FK
-        string guard "nullable"
-    }
-    RELATIONSHIPTYPE {
-        uuid id PK
-        uuid projectId FK "null for templates"
-        uuid sourceTemplateId FK "null for templates"
-        string name
-        string inverseName "null when symmetric"
-        string cardinality
-        bool directional
-    }
-    RELATIONSHIPTYPERULE {
-        uuid id PK
-        uuid relationshipTypeId FK
-        uuid sourceWorkItemTypeId FK
-        uuid targetWorkItemTypeId FK
-    }
-    WORKITEM {
-        uuid id PK
-        uuid projectId FK
-        uuid workItemTypeId FK
-        uuid statusId FK
-        uuid assigneeId FK "nullable"
+        int number
+        uuid type FK 
+        uuid assignedTo FK
+        uuid createdBy FK
+        uuid project FK
+        uuid status FK
+        uuid sprint FK
+        uuid parent FK
+
         string title
-        json fields
-    }
-    WORKITEMSTATUSCHANGE {
-        uuid id PK
-        uuid workItemId FK
-        uuid fromStatusId FK "null for the initial status"
-        uuid toStatusId FK
-        uuid changedById FK
-        datetime changedAt
-    }
-    RELATIONSHIP {
-        uuid id PK
-        uuid relationshipTypeId FK
-        uuid sourceItemId FK
-        uuid targetItemId FK
-    }
-    SPRINT {
-        uuid id PK
-        uuid projectId FK
-        string name
-        date startDate
-        date endDate
-        int capacityPoints
-    }
-    SPRINTITEM {
-        uuid id PK
-        uuid sprintId FK
-        uuid workItemId FK
+        string description
         int points
     }
-    SAVEDQUERY {
-        uuid id PK
-        uuid ownerId FK
-        uuid projectId FK "null for cross-project queries"
-        string name
-        json filter
+    WorkItemRel {
+      uuid id PK
+      uuid source FK
+      uuid target FK
+      uuid type FK
     }
+    WorkItemRelType {
+      uuid id PK
+      string name
+      string inverseName
+    }
+    WorkItemField {
+        uuid id PK
+        uuid type FK
+        uuid workItem FK
+        json value
+    }
+    StatusTransition {
+        uuid id PK
+        uuid tplWorkItem FK
+        uuid from FK
+        uuid to FK
+    }
+    Sprint {
+        uuid id PK
+        uuid project FK
+        string name
+        date start
+        date end
+        int capacity
+    }
+
+    User ||--o{ WorkItem: creates
+    User |o--o{ WorkItem: isAssignedTo
+
+    Project }o--o{ TplWorkItem: uses 
+    Project ||--o{ Sprint: has 
+    Project ||--o{ WorkItem: has
+
+    TplWorkItem ||--o{ TplWorkItemField : has
+    TplWorkItem }o--o{ TplWorkItemStatus : uses
+    TplWorkItem ||--o{ StatusTransition : allows
+    TplWorkItem ||--o{ WorkItem : has
+
+    TplWorkItemField ||--o{ TplWorkItemFieldOption : allows
+    TplWorkItemStatus ||--o{ WorkItem : has
+    WorkItem ||--o{ WorkItemField : has
+    WorkItem }o--|o Sprint : isOn
+
+    TplWorkItemStatus ||--o{ TplWorkItem : "initial status of"
+    
+    TplWorkItemField ||--o{ WorkItemField : has
+
+    StatusTransition }o--|| TplWorkItemStatus: allowsFrom
+    StatusTransition }o--|| TplWorkItemStatus: allowsTo
+
+    WorkItemRel }o--|| WorkItem: source
+    WorkItemRel }o--|| WorkItem: target
+    WorkItemRel }o--|| WorkItemRelType: is
 ```
 
 ## Conventions
