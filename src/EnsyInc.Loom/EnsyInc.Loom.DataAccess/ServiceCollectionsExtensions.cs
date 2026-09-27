@@ -24,7 +24,15 @@ public static class ServiceCollectionsExtensions
     }
 
     private static IServiceCollection AddRepos(this IServiceCollection services)
-        => services.AddScoped<IProjectRepo, ProjectRepo>();
+        => services
+            .AddScoped<IProjectRepo, ProjectRepo>()
+            .AddScoped<ITplWorkItemStatusRepo, TplWorkItemStatusRepo>()
+            .AddScoped<ITplWorkItemRepo, TplWorkItemRepo>()
+            .AddScoped<ITplWorkItemFieldRepo, TplWorkItemFieldRepo>()
+            .AddScoped<ITplWorkItemFieldOptionRepo, TplWorkItemFieldOptionRepo>()
+            .AddScoped<IStatusTransitionRepo, StatusTransitionRepo>()
+            .AddScoped<IProjectWorkItemTypeRepo, ProjectWorkItemTypeRepo>()
+            .AddScoped<IWorkItemTypeStatusRepo, WorkItemTypeStatusRepo>();
 
     private static DbContextOptions<LoomDbContext> GetDbContextOptions(DbConfig dbConfig)
         => new DbContextOptionsBuilder<LoomDbContext>()
