@@ -31,6 +31,8 @@ services:
       target: api
     environment:
       Db__ConnectionString: "Server=db;Database=Loom;User Id=sa;Password=Password1!;TrustServerCertificate=True;"
+      Entra__TenantId: "${ENTRA_TENANT_ID:-placeholder-tenant-id}"
+      Entra__Audience: "${ENTRA_AUDIENCE:-placeholder-audience}"
     ports:
       - "7088:7088"
       - "5029:5029"

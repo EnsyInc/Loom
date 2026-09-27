@@ -82,6 +82,10 @@ jobs:
     env:
       Db__ConnectionString: "Server=localhost;Database=Loom;User Id=sa;Password=Password1!;TrustServerCertificate=True;"
       ApiBaseUrl: "https://localhost:7088"
+      # Not real Entra values: no endpoint is [Authorize]-protected yet, and once one is, ServiceTests
+      # authenticate against a mock issuer (see docs/work-breakdown.md Phase 2), not the real tenant.
+      Entra__TenantId: "ci-placeholder-tenant-id"
+      Entra__Audience: "ci-placeholder-audience"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
