@@ -57,6 +57,7 @@ erDiagram
         uuid fieldId FK
         string value
         string label
+        int rank
     }
     TplWorkItemStatus {
         uuid id PK
