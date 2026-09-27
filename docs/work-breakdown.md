@@ -31,7 +31,7 @@ tests. Reference implementation for every phase below.
 
 ---
 
-## Phase 1 — Work item type templates
+## Phase 1 — Work item type templates (done)
 
 **Depends on:** nothing (no FK to `User` or `WorkItem`).
 **Unblocks:** Phase 3 (work items need a type, status, and fields to exist).
@@ -79,7 +79,7 @@ until automation rules are designed.
 
 ---
 
-## Phase 2 — Auth (Microsoft Entra ID) & `User`
+## Phase 2 — Auth (Microsoft Entra ID) & `User` (done)
 
 **Depends on:** nothing structurally, but do this before Phase 3 —
 `WorkItem.createdById` is a required FK to `User`, so a real user must exist
