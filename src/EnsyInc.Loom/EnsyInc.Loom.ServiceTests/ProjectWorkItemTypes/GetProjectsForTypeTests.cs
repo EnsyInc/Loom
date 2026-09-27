@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
+using EnsyInc.Loom.ServiceTests.Auth;
 using EnsyInc.Loom.ServiceTests.Fixtures;
 using EnsyInc.Loom.ServiceTests.Models;
 using EnsyInc.Loom.ServiceTests.WorkItemTemplates;
@@ -23,5 +24,12 @@ public sealed class GetProjectsForTypeTests(ApiFixture fixture) : WorkItemTempla
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.Content.ReadFromJsonAsync<GetWorkItemTypeProjectsResponse>(ApiFixture.JsonOptions, ct);
         Assert.Contains(body!.Projects, p => p.Id == project.Id);
+    }
+
+    [Fact]
+    public async Task GetProjectsForType_NoTokenOrBadToken_ReturnsUnauthorized()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await AuthAssertions.AssertRequiresAuthentication(Fixture, HttpMethod.Get, $"/work-item-types/{Guid.NewGuid()}/projects", ct);
     }
 }

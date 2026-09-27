@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
+using EnsyInc.Loom.ServiceTests.Auth;
 using EnsyInc.Loom.ServiceTests.Fixtures;
 using EnsyInc.Loom.ServiceTests.Models;
 
@@ -54,5 +55,12 @@ public sealed class UpdateProjectTests(ApiFixture fixture) : ProjectsApiTestBase
         var getResponse = await Fixture.Client.GetAsync($"/projects/{created.Id}", ct);
         var fetched = await getResponse.Content.ReadFromJsonAsync<GetProjectResponse>(ApiFixture.JsonOptions, ct);
         Assert.Equal(created.Name, fetched!.Name);
+    }
+
+    [Fact]
+    public async Task UpdateProject_NoTokenOrBadToken_ReturnsUnauthorized()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await AuthAssertions.AssertRequiresAuthentication(Fixture, HttpMethod.Put, $"/projects/{Guid.NewGuid()}", ct);
     }
 }

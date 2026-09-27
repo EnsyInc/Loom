@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
+using EnsyInc.Loom.ServiceTests.Auth;
 using EnsyInc.Loom.ServiceTests.Fixtures;
 using EnsyInc.Loom.ServiceTests.Models;
 using EnsyInc.Loom.ServiceTests.WorkItemTemplates;
@@ -39,5 +40,12 @@ public sealed class GetTransitionsTests(ApiFixture fixture) : WorkItemTemplatesA
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.Content.ReadFromJsonAsync<GetStatusTransitionsResponse>(ApiFixture.JsonOptions, ct);
         Assert.Empty(body!.Transitions);
+    }
+
+    [Fact]
+    public async Task GetTransitions_NoTokenOrBadToken_ReturnsUnauthorized()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await AuthAssertions.AssertRequiresAuthentication(Fixture, HttpMethod.Get, $"/work-item-types/{Guid.NewGuid()}/transitions", ct);
     }
 }

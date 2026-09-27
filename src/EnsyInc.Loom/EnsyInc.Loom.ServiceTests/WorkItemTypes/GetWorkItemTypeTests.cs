@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
+using EnsyInc.Loom.ServiceTests.Auth;
 using EnsyInc.Loom.ServiceTests.Fixtures;
 using EnsyInc.Loom.ServiceTests.Models;
 using EnsyInc.Loom.ServiceTests.WorkItemTemplates;
@@ -33,5 +34,12 @@ public sealed class GetWorkItemTypeTests(ApiFixture fixture) : WorkItemTemplates
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         var error = await response.Content.ReadFromJsonAsync<ErrorResponse>(ApiFixture.JsonOptions, ct);
         Assert.Equal("TplWorkItemNotFound", error!.ErrorCode);
+    }
+
+    [Fact]
+    public async Task GetWorkItemType_NoTokenOrBadToken_ReturnsUnauthorized()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await AuthAssertions.AssertRequiresAuthentication(Fixture, HttpMethod.Get, $"/work-item-types/{Guid.NewGuid()}", ct);
     }
 }

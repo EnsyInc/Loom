@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
+using EnsyInc.Loom.ServiceTests.Auth;
 using EnsyInc.Loom.ServiceTests.Fixtures;
 using EnsyInc.Loom.ServiceTests.Models;
 
@@ -33,11 +34,36 @@ public sealed class GetCurrentUserTests(ApiFixture fixture)
     }
 
     [Fact]
-    public async Task GetCurrentUser_NoToken_ReturnsUnauthorized()
+    public async Task GetCurrentUser_ReturningUserWithChangedProfile_ReflectsUpdatedProfile()
     {
         var ct = TestContext.Current.CancellationToken;
-        var response = await fixture.Client.GetAsync("/users/me", ct);
+        var entraObjectId = Guid.NewGuid().ToString();
 
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        var firstToken = fixture.MockEntraIssuer.MintToken(entraObjectId, "Original-First", "Original-Last", "original@example.com");
+        using var firstRequest = new HttpRequestMessage(HttpMethod.Get, "/users/me");
+        firstRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", firstToken);
+        var firstResponse = await fixture.Client.SendAsync(firstRequest, ct);
+        Assert.Equal(HttpStatusCode.OK, firstResponse.StatusCode);
+        var firstUser = await firstResponse.Content.ReadFromJsonAsync<GetUserResponse>(ApiFixture.JsonOptions, ct);
+
+        var newEmail = $"{Guid.NewGuid()}@example.com";
+        var secondToken = fixture.MockEntraIssuer.MintToken(entraObjectId, "Updated-First", "Updated-Last", newEmail);
+        using var secondRequest = new HttpRequestMessage(HttpMethod.Get, "/users/me");
+        secondRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secondToken);
+        var secondResponse = await fixture.Client.SendAsync(secondRequest, ct);
+
+        Assert.Equal(HttpStatusCode.OK, secondResponse.StatusCode);
+        var secondUser = await secondResponse.Content.ReadFromJsonAsync<GetUserResponse>(ApiFixture.JsonOptions, ct);
+        Assert.Equal(firstUser!.Id, secondUser!.Id);
+        Assert.Equal("Updated-First", secondUser.FirstName);
+        Assert.Equal("Updated-Last", secondUser.LastName);
+        Assert.Equal(newEmail, secondUser.Email);
+    }
+
+    [Fact]
+    public async Task GetCurrentUser_NoTokenOrBadToken_ReturnsUnauthorized()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await AuthAssertions.AssertRequiresAuthentication(fixture, HttpMethod.Get, "/users/me", ct);
     }
 }

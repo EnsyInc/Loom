@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
+using EnsyInc.Loom.ServiceTests.Auth;
 using EnsyInc.Loom.ServiceTests.Fixtures;
 using EnsyInc.Loom.ServiceTests.Models;
 using EnsyInc.Loom.ServiceTests.WorkItemTemplates;
@@ -45,5 +46,12 @@ public sealed class UpdateFieldTests(ApiFixture fixture) : WorkItemTemplatesApiT
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         var error = await response.Content.ReadFromJsonAsync<ErrorResponse>(ApiFixture.JsonOptions, ct);
         Assert.Equal("TplWorkItemFieldNotFound", error!.ErrorCode);
+    }
+
+    [Fact]
+    public async Task UpdateField_NoTokenOrBadToken_ReturnsUnauthorized()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await AuthAssertions.AssertRequiresAuthentication(Fixture, HttpMethod.Put, $"/work-item-types/{Guid.NewGuid()}/fields/{Guid.NewGuid()}", ct);
     }
 }

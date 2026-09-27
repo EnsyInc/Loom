@@ -1,5 +1,6 @@
 using System.Net;
 
+using EnsyInc.Loom.ServiceTests.Auth;
 using EnsyInc.Loom.ServiceTests.Fixtures;
 using EnsyInc.Loom.ServiceTests.Models;
 using EnsyInc.Loom.ServiceTests.WorkItemTemplates;
@@ -22,5 +23,12 @@ public sealed class DeleteOptionTests(ApiFixture fixture) : WorkItemTemplatesApi
 
         Assert.Equal(HttpStatusCode.NoContent, firstDelete.StatusCode);
         Assert.Equal(HttpStatusCode.NoContent, secondDelete.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteOption_NoTokenOrBadToken_ReturnsUnauthorized()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await AuthAssertions.AssertRequiresAuthentication(Fixture, HttpMethod.Delete, $"/fields/{Guid.NewGuid()}/options/{Guid.NewGuid()}", ct);
     }
 }

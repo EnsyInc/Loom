@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
+using EnsyInc.Loom.ServiceTests.Auth;
 using EnsyInc.Loom.ServiceTests.Fixtures;
 using EnsyInc.Loom.ServiceTests.Models;
 using EnsyInc.Loom.ServiceTests.WorkItemTemplates;
@@ -39,5 +40,12 @@ public sealed class UpdateOptionTests(ApiFixture fixture) : WorkItemTemplatesApi
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         var error = await response.Content.ReadFromJsonAsync<ErrorResponse>(ApiFixture.JsonOptions, ct);
         Assert.Equal("TplWorkItemFieldOptionNotFound", error!.ErrorCode);
+    }
+
+    [Fact]
+    public async Task UpdateOption_NoTokenOrBadToken_ReturnsUnauthorized()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await AuthAssertions.AssertRequiresAuthentication(Fixture, HttpMethod.Put, $"/fields/{Guid.NewGuid()}/options/{Guid.NewGuid()}", ct);
     }
 }

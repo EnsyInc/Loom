@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
+using EnsyInc.Loom.ServiceTests.Auth;
 using EnsyInc.Loom.ServiceTests.Fixtures;
 using EnsyInc.Loom.ServiceTests.Models;
 using EnsyInc.Loom.ServiceTests.WorkItemTemplates;
@@ -36,5 +37,12 @@ public sealed class GetStatusesTests(ApiFixture fixture) : WorkItemTemplatesApiT
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var body = await response.Content.ReadFromJsonAsync<GetStatusesResponse>(ApiFixture.JsonOptions, ct);
         Assert.DoesNotContain(body!.Statuses, s => s.Id == created.Id);
+    }
+
+    [Fact]
+    public async Task GetStatuses_NoTokenOrBadToken_ReturnsUnauthorized()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await AuthAssertions.AssertRequiresAuthentication(Fixture, HttpMethod.Get, "/statuses", ct);
     }
 }
