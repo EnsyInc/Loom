@@ -16,5 +16,6 @@ public static class ServiceCollectionExtensions
             .AddScoped<IStatusTransitionsService, StatusTransitionsService>()
             .AddScoped<ITplWorkItemFieldsService, TplWorkItemFieldsService>()
             .AddScoped<ITplWorkItemFieldOptionsService, TplWorkItemFieldOptionsService>()
-            .AddScoped<IProjectWorkItemTypesService, ProjectWorkItemTypesService>();
+            .AddScoped<IProjectWorkItemTypesService, ProjectWorkItemTypesService>()
+            .AddScoped<IUsersService, UsersService>();
 }

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
+using EnsyInc.Loom.ServiceTests.Auth;
 using EnsyInc.Loom.ServiceTests.Fixtures;
 using EnsyInc.Loom.ServiceTests.Models;
 using EnsyInc.Loom.ServiceTests.WorkItemTemplates;
@@ -55,5 +56,12 @@ public sealed class CreateFieldTests(ApiFixture fixture) : WorkItemTemplatesApiT
         var error = await response.Content.ReadFromJsonAsync<ErrorResponse>(ApiFixture.JsonOptions, ct);
         Assert.Equal("TplWorkItemFieldKeyAlreadyExists", error!.ErrorCode);
         Assert.Equal(existing.Id.ToString(), error.Parameters["ExistingFieldId"]);
+    }
+
+    [Fact]
+    public async Task CreateField_NoTokenOrBadToken_ReturnsUnauthorized()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await AuthAssertions.AssertRequiresAuthentication(Fixture, HttpMethod.Post, $"/work-item-types/{Guid.NewGuid()}/fields", ct);
     }
 }

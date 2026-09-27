@@ -6,12 +6,14 @@ using EnsyInc.Loom.Services.Abstractions;
 
 using FluentValidation;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EnsyInc.Loom.Api.Controllers;
 
 /// <summary>Manage work item types, the shared definitions projects opt into.</summary>
 [ApiController]
+[Authorize]
 [Route("work-item-types")]
 [Produces("application/json")]
 public sealed class TplWorkItemTypesController(

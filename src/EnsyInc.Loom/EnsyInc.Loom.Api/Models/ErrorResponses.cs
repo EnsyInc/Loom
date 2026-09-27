@@ -28,6 +28,8 @@ internal static class ErrorResponses
 
     public static readonly ErrorResponse FieldDoesNotSupportOptionsError = new("FieldDoesNotSupportOptions", "Only Option and MultiOption fields can have options.", []);
 
+    public static readonly ErrorResponse UserNotFoundError = new("UserNotFound", "The signed-in user has no matching profile.", []);
+
     public static readonly ErrorResponse UnexpectedError = new("UnexpectedError", "An unexpected error occurred.", []);
 
     public static ErrorResponse ValidationError(Dictionary<string, string> parameters)

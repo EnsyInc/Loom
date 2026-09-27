@@ -6,12 +6,14 @@ using EnsyInc.Loom.Services.Abstractions;
 
 using FluentValidation;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EnsyInc.Loom.Api.Controllers;
 
 /// <summary>Manage a work item type's allowed status transitions.</summary>
 [ApiController]
+[Authorize]
 [Route("work-item-types/{typeId:guid}/transitions")]
 [Produces("application/json")]
 public sealed class StatusTransitionsController(

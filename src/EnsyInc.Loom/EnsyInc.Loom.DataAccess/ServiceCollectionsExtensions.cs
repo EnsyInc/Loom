@@ -33,7 +33,8 @@ public static class ServiceCollectionsExtensions
             .AddScoped<ITplWorkItemFieldOptionRepo, TplWorkItemFieldOptionRepo>()
             .AddScoped<IStatusTransitionRepo, StatusTransitionRepo>()
             .AddScoped<IProjectWorkItemTypeRepo, ProjectWorkItemTypeRepo>()
-            .AddScoped<IWorkItemTypeStatusRepo, WorkItemTypeStatusRepo>();
+            .AddScoped<IWorkItemTypeStatusRepo, WorkItemTypeStatusRepo>()
+            .AddScoped<IUserRepo, UserRepo>();
 
     private static DbContextOptions<LoomDbContext> GetDbContextOptions(DbConfig dbConfig)
         => new DbContextOptionsBuilder<LoomDbContext>()

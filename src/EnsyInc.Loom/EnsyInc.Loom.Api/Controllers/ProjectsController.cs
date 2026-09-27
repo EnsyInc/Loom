@@ -6,12 +6,14 @@ using EnsyInc.Loom.Services.Abstractions;
 
 using FluentValidation;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EnsyInc.Loom.Api.Controllers;
 
 /// <summary>Manage projects, the containers for work items.</summary>
 [ApiController]
+[Authorize]
 [Route("projects")]
 [Produces("application/json")]
 public sealed class ProjectsController(

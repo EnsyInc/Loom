@@ -1,5 +1,6 @@
 using System.Net;
 
+using EnsyInc.Loom.ServiceTests.Auth;
 using EnsyInc.Loom.ServiceTests.Fixtures;
 
 namespace EnsyInc.Loom.ServiceTests.Projects;
@@ -40,5 +41,12 @@ public sealed class DeleteProjectTests(ApiFixture fixture) : ProjectsApiTestBase
 
         var getResponse = await Fixture.Client.GetAsync($"/projects/{created.Id}", ct);
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteProject_NoTokenOrBadToken_ReturnsUnauthorized()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await AuthAssertions.AssertRequiresAuthentication(Fixture, HttpMethod.Delete, $"/projects/{Guid.NewGuid()}", ct);
     }
 }

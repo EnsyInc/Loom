@@ -6,12 +6,14 @@ using EnsyInc.Loom.Services.Abstractions;
 
 using FluentValidation;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EnsyInc.Loom.Api.Controllers;
 
 /// <summary>Manage a work item type's custom fields.</summary>
 [ApiController]
+[Authorize]
 [Route("work-item-types/{typeId:guid}/fields")]
 [Produces("application/json")]
 public sealed class TplWorkItemFieldsController(

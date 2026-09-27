@@ -4,12 +4,14 @@ using EnsyInc.Loom.Api.Models.Mappers;
 using EnsyInc.Loom.Core.Errors;
 using EnsyInc.Loom.Services.Abstractions;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EnsyInc.Loom.Api.Controllers;
 
 /// <summary>Manage which work item types a project has opted into.</summary>
 [ApiController]
+[Authorize]
 [Route("projects/{projectId:guid}/work-item-types")]
 [Produces("application/json")]
 public sealed class ProjectWorkItemTypesController(IProjectWorkItemTypesService projectTypesService) : ControllerBase

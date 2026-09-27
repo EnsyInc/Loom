@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 
+using EnsyInc.Loom.ServiceTests.Auth;
 using EnsyInc.Loom.ServiceTests.Fixtures;
 using EnsyInc.Loom.ServiceTests.Models;
 using EnsyInc.Loom.ServiceTests.WorkItemTemplates;
@@ -60,5 +61,12 @@ public sealed class DeleteWorkItemTypeTests(ApiFixture fixture) : WorkItemTempla
 
         Assert.Equal(HttpStatusCode.NoContent, deleteStatus1Response.StatusCode);
         Assert.Equal(HttpStatusCode.NoContent, deleteStatus2Response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteWorkItemType_NoTokenOrBadToken_ReturnsUnauthorized()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await AuthAssertions.AssertRequiresAuthentication(Fixture, HttpMethod.Delete, $"/work-item-types/{Guid.NewGuid()}", ct);
     }
 }

@@ -6,12 +6,14 @@ using EnsyInc.Loom.Services.Abstractions;
 
 using FluentValidation;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EnsyInc.Loom.Api.Controllers;
 
 /// <summary>Manage a field's options.</summary>
 [ApiController]
+[Authorize]
 [Route("fields/{fieldId:guid}/options")]
 [Produces("application/json")]
 public sealed class TplWorkItemFieldOptionsController(

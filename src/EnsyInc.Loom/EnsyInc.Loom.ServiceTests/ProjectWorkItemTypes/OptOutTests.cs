@@ -1,5 +1,6 @@
 using System.Net;
 
+using EnsyInc.Loom.ServiceTests.Auth;
 using EnsyInc.Loom.ServiceTests.Fixtures;
 using EnsyInc.Loom.ServiceTests.WorkItemTemplates;
 
@@ -53,5 +54,12 @@ public sealed class OptOutTests(ApiFixture fixture) : WorkItemTemplatesApiTestBa
 
         var deleteTypeResponse = await Fixture.Client.DeleteAsync($"/work-item-types/{type.Id}", ct);
         Assert.Equal(HttpStatusCode.NoContent, deleteTypeResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task OptOut_NoTokenOrBadToken_ReturnsUnauthorized()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await AuthAssertions.AssertRequiresAuthentication(Fixture, HttpMethod.Delete, $"/projects/{Guid.NewGuid()}/work-item-types/{Guid.NewGuid()}", ct);
     }
 }

@@ -2,9 +2,14 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text.Json.Serialization;
 
+using EnsyInc.Loom.Core.Config;
 using EnsyInc.Loom.DataAccess;
 using EnsyInc.Loom.Services;
+using EnsyInc.Loom.Services.Abstractions;
 
+using EnsyNet.Core.Configurations;
+
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi;
 
 using NLog;
@@ -57,7 +62,29 @@ internal static class BootstrappingExtensions
         private void AddServices(IConfiguration config)
             => services.AddDefaultServices()
                 .AddDataAccess(config)
-                .AddApplicationServices();
+                .AddApplicationServices()
+                .AddEntraAuthentication(config);
+
+        private IServiceCollection AddEntraAuthentication(IConfiguration config)
+        {
+            services.AddRequiredConfiguration<EntraConfig>(config, out var entraConfig);
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(opt =>
+                {
+                    opt.Authority = entraConfig.GetAuthority();
+                    opt.Audience = entraConfig.Audience;
+                    // Only the Authority override (used by tests to point at a local mock issuer) runs over plain HTTP.
+                    opt.RequireHttpsMetadata = string.IsNullOrWhiteSpace(entraConfig.Authority);
+                    opt.MapInboundClaims = false;
+                    opt.Events = new JwtBearerEvents
+                    {
+                        OnTokenValidated = OnEntraTokenValidated,
+                    };
+                });
+
+            return services.AddAuthorization();
+        }
 
         private IServiceCollection AddDefaultServices()
         {
@@ -93,6 +120,7 @@ internal static class BootstrappingExtensions
             app.UseSwagger()
                 .UseSwaggerUI();
             app.UseHttpsRedirection()
+                .UseAuthentication()
                 .UseAuthorization();
             app.MapControllers();
 
@@ -116,6 +144,32 @@ internal static class BootstrappingExtensions
 
             LogManager.Flush();
             LogManager.Shutdown();
+        }
+    }
+
+    // Entra tokens carry no separate "login" event, so this is where a User row is provisioned on
+    // first sign-in (or refreshed if the user's name/email changed in Entra since their last one).
+    private static async Task OnEntraTokenValidated(TokenValidatedContext context)
+    {
+        var principal = context.Principal!;
+        var entraObjectId = principal.FindFirst("oid")?.Value;
+
+        if (string.IsNullOrWhiteSpace(entraObjectId))
+        {
+            context.Fail("The token is missing an 'oid' claim.");
+            return;
+        }
+
+        var firstName = principal.FindFirst("given_name")?.Value ?? string.Empty;
+        var lastName = principal.FindFirst("family_name")?.Value ?? string.Empty;
+        var email = principal.FindFirst("preferred_username")?.Value ?? principal.FindFirst("email")?.Value ?? string.Empty;
+
+        var usersService = context.HttpContext.RequestServices.GetRequiredService<IUsersService>();
+        var result = await usersService.UpsertOnLogin(entraObjectId, firstName, lastName, email, context.HttpContext.RequestAborted);
+
+        if (result.HasError)
+        {
+            context.Fail("Failed to provision the signed-in user.");
         }
     }
 }

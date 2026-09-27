@@ -61,4 +61,10 @@ public static class ErrorCodes
     public const string FieldDoesNotSupportOptionsError = "[FieldDoesNotSupportOptionsError]";
 
     #endregion
+
+    #region Users
+
+    public const string UserNotFoundError = "[UserNotFoundError]";
+
+    #endregion
 }

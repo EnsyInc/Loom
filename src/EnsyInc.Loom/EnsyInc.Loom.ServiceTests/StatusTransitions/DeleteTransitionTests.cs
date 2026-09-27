@@ -1,5 +1,6 @@
 using System.Net;
 
+using EnsyInc.Loom.ServiceTests.Auth;
 using EnsyInc.Loom.ServiceTests.Fixtures;
 using EnsyInc.Loom.ServiceTests.Models;
 using EnsyInc.Loom.ServiceTests.WorkItemTemplates;
@@ -36,5 +37,12 @@ public sealed class DeleteTransitionTests(ApiFixture fixture) : WorkItemTemplate
         var response = await Fixture.Client.DeleteAsync($"/work-item-types/{type.Id}/transitions/{Guid.NewGuid()}", ct);
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteTransition_NoTokenOrBadToken_ReturnsUnauthorized()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await AuthAssertions.AssertRequiresAuthentication(Fixture, HttpMethod.Delete, $"/work-item-types/{Guid.NewGuid()}/transitions/{Guid.NewGuid()}", ct);
     }
 }
