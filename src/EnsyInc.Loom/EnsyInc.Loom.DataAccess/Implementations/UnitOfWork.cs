@@ -3,11 +3,10 @@ using EnsyInc.Loom.DataAccess.Abstractions;
 using EnsyNet.Core.Results;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace EnsyInc.Loom.DataAccess.Implementations;
 
-internal sealed class UnitOfWork(LoomDbContext dbContext, ILogger<UnitOfWork> logger) : IUnitOfWork
+internal sealed class UnitOfWork(LoomDbContext dbContext) : IUnitOfWork
 {
     public Task<Result> RunInTransaction(Func<Task<Result>> operation, CancellationToken ct)
     {
@@ -34,9 +33,10 @@ internal sealed class UnitOfWork(LoomDbContext dbContext, ILogger<UnitOfWork> lo
                 await transaction.CommitAsync(ct);
                 return result;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                logger.LogError(ex, "Rolling back transaction due to an unhandled exception.");
+                // Not logged here: the exception still propagates and the Api's GlobalExceptionHandler
+                // logs every unhandled exception it receives, so logging here too would double it up.
                 await transaction.RollbackAsync(ct);
                 throw;
             }

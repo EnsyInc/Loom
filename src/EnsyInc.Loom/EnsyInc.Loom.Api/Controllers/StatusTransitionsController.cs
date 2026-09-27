@@ -72,7 +72,6 @@ public sealed class StatusTransitionsController(
     }
 
     /// <summary>Deletes a status transition. Idempotent: deleting a transition that doesn't exist (or was already deleted) still succeeds.</summary>
-    /// <param name="typeId">The type's id.</param>
     /// <param name="id">The transition's id.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <response code="204">The transition is deleted (or was already gone).</response>
@@ -80,7 +79,7 @@ public sealed class StatusTransitionsController(
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> DeleteTransition(Guid typeId, Guid id, CancellationToken ct)
+    public async Task<IActionResult> DeleteTransition(Guid id, CancellationToken ct)
     {
         var result = await transitionsService.SoftDeleteTransition(id, ct);
 

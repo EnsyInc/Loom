@@ -40,7 +40,6 @@ public sealed class TplWorkItemFieldsController(
     }
 
     /// <summary>Gets a single field by id.</summary>
-    /// <param name="typeId">The type's id.</param>
     /// <param name="id">The field's id.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <response code="200">The field.</response>
@@ -50,7 +49,7 @@ public sealed class TplWorkItemFieldsController(
     [ProducesResponseType(typeof(GetWorkItemFieldResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetField(Guid typeId, Guid id, CancellationToken ct)
+    public async Task<IActionResult> GetField(Guid id, CancellationToken ct)
     {
         var result = await fieldsService.GetField(id, ct);
 
@@ -94,7 +93,6 @@ public sealed class TplWorkItemFieldsController(
     }
 
     /// <summary>Updates an existing field's label, required flag, and default value. Its key and data type are immutable after creation.</summary>
-    /// <param name="typeId">The type's id.</param>
     /// <param name="id">The field's id.</param>
     /// <param name="request">The new field values.</param>
     /// <param name="ct">Cancellation token.</param>
@@ -107,7 +105,7 @@ public sealed class TplWorkItemFieldsController(
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpdateField(Guid typeId, Guid id, UpdateWorkItemFieldRequest request, CancellationToken ct)
+    public async Task<IActionResult> UpdateField(Guid id, UpdateWorkItemFieldRequest request, CancellationToken ct)
     {
         await updateFieldValidator.ValidateAndThrowAsync(request, ct);
 
@@ -122,7 +120,6 @@ public sealed class TplWorkItemFieldsController(
     }
 
     /// <summary>Deletes a field. Idempotent: deleting a field that doesn't exist (or was already deleted) still succeeds.</summary>
-    /// <param name="typeId">The type's id.</param>
     /// <param name="id">The field's id.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <response code="204">The field is deleted (or was already gone).</response>
@@ -132,7 +129,7 @@ public sealed class TplWorkItemFieldsController(
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> DeleteField(Guid typeId, Guid id, CancellationToken ct)
+    public async Task<IActionResult> DeleteField(Guid id, CancellationToken ct)
     {
         var result = await fieldsService.SoftDeleteField(id, ct);
 

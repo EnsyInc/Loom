@@ -72,7 +72,6 @@ public sealed class TplWorkItemFieldOptionsController(
     }
 
     /// <summary>Updates an existing option's label and rank. Its value is immutable after creation.</summary>
-    /// <param name="fieldId">The field's id.</param>
     /// <param name="id">The option's id.</param>
     /// <param name="request">The new option values.</param>
     /// <param name="ct">Cancellation token.</param>
@@ -85,7 +84,7 @@ public sealed class TplWorkItemFieldOptionsController(
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpdateOption(Guid fieldId, Guid id, UpdateFieldOptionRequest request, CancellationToken ct)
+    public async Task<IActionResult> UpdateOption(Guid id, UpdateFieldOptionRequest request, CancellationToken ct)
     {
         await updateOptionValidator.ValidateAndThrowAsync(request, ct);
 
@@ -100,7 +99,6 @@ public sealed class TplWorkItemFieldOptionsController(
     }
 
     /// <summary>Deletes an option. Idempotent: deleting an option that doesn't exist (or was already deleted) still succeeds.</summary>
-    /// <param name="fieldId">The field's id.</param>
     /// <param name="id">The option's id.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <response code="204">The option is deleted (or was already gone).</response>
@@ -108,7 +106,7 @@ public sealed class TplWorkItemFieldOptionsController(
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> DeleteOption(Guid fieldId, Guid id, CancellationToken ct)
+    public async Task<IActionResult> DeleteOption(Guid id, CancellationToken ct)
     {
         var result = await optionsService.SoftDeleteOption(id, ct);
 
