@@ -4,12 +4,14 @@ using EnsyInc.Loom.Api.Models.Mappers;
 using EnsyInc.Loom.Core.Errors;
 using EnsyInc.Loom.Services.Abstractions;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EnsyInc.Loom.Api.Controllers;
 
 /// <summary>Manage which statuses a work item type uses.</summary>
 [ApiController]
+[Authorize]
 [Route("work-item-types/{typeId:guid}/statuses")]
 [Produces("application/json")]
 public sealed class WorkItemTypeStatusesController(IWorkItemTypeStatusesService typeStatusesService) : ControllerBase

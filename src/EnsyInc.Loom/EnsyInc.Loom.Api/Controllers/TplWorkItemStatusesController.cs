@@ -6,12 +6,14 @@ using EnsyInc.Loom.Services.Abstractions;
 
 using FluentValidation;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EnsyInc.Loom.Api.Controllers;
 
 /// <summary>Manage statuses, shared across work item types.</summary>
 [ApiController]
+[Authorize]
 [Route("statuses")]
 [Produces("application/json")]
 public sealed class TplWorkItemStatusesController(
