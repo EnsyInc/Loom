@@ -10,7 +10,7 @@ using EnsyNet.DataAccess.Abstractions.Errors;
 
 namespace EnsyInc.Loom.Services.Implementations;
 
-internal sealed class ProjectsService(IProjectRepo projectRepo) : IProjectsService
+internal sealed class ProjectsService(IProjectRepo projectRepo, IProjectWorkItemTypeRepo projectTypeRepo, IUnitOfWork unitOfWork) : IProjectsService
 {
     public async Task<Result<IEnumerable<Project>>> ListProjects(CancellationToken ct)
     {
@@ -66,19 +66,26 @@ internal sealed class ProjectsService(IProjectRepo projectRepo) : IProjectsServi
         return Result.Ok(existing.Data with { Name = project.Name, UpdatedAt = DateTime.UtcNow });
     }
 
-    public async Task<Result> SoftDeleteProject(Guid id, CancellationToken ct)
-    {
-        var result = await projectRepo.SoftDelete(id, ct);
-
-        if (result.HasError)
+    public Task<Result> SoftDeleteProject(Guid id, CancellationToken ct)
+        => unitOfWork.RunInTransaction(async () =>
         {
-            return result.Error switch
-            {
-                DeleteOperationFailedError => Result.Ok(),
-                _ => Result.FromError(new UnexpectedError()),
-            };
-        }
+            var result = await projectRepo.SoftDelete(id, ct);
 
-        return Result.Ok();
-    }
+            if (result.HasError)
+            {
+                return result.Error switch
+                {
+                    DeleteOperationFailedError => Result.Ok(),
+                    _ => Result.FromError(new UnexpectedError()),
+                };
+            }
+
+            // Also removes the project's opt-in links, so a work item type it used isn't left
+            // permanently blocked from deletion by a link to a project that no longer exists.
+            var linksResult = await projectTypeRepo.SoftDelete(l => l.ProjectId == id, ct);
+
+            return linksResult.HasError && linksResult.Error is not BulkDeleteOperationFailedError
+                ? Result.FromError(new UnexpectedError())
+                : Result.Ok();
+        }, ct);
 }
