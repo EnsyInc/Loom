@@ -1,6 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
+using EnsyInc.Loom.ServiceTests.Auth;
+
 using Microsoft.Extensions.Configuration;
 
 namespace EnsyInc.Loom.ServiceTests.Fixtures;
@@ -16,6 +18,8 @@ public sealed class ApiFixture : IAsyncLifetime, IAsyncDisposable
     };
 
     public HttpClient Client { get; private set; } = null!;
+
+    public MockEntraIssuer MockEntraIssuer { get; } = new();
 
     public ValueTask InitializeAsync()
     {
@@ -35,12 +39,19 @@ public sealed class ApiFixture : IAsyncLifetime, IAsyncDisposable
 
         Client = new HttpClient(handler) { BaseAddress = new Uri(apiBaseUrl) };
 
+        // Started before any test runs. The real Api (a separate, already-running process) is only
+        // configured to trust this issuer once it actually needs to validate a token, so starting it
+        // here — rather than exactly when a test needs it — is early enough.
+        MockEntraIssuer.Start();
+
         return ValueTask.CompletedTask;
     }
 
     public ValueTask DisposeAsync()
     {
         Client.Dispose();
+        MockEntraIssuer.Dispose();
+
         return ValueTask.CompletedTask;
     }
 }
