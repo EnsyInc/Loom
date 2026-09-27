@@ -39,22 +39,22 @@ erDiagram
     }
     TplWorkItem {
         uuid id PK
-        uuid initialStatus FK
+        uuid initialStatusId FK
         string name
-        string IconUrl
+        string iconUrl
     }
     TplWorkItemField {
         uuid id PK
-        string type
+        uuid typeId FK
         string key
         string label
-        uuid TplWorkItemId FK
+        string dataType
         bool required
         json defaultValue
     }
     TplWorkItemFieldOption {
         uuid id PK
-        uuid field FK
+        uuid fieldId FK
         string value
         string label
     }
@@ -63,80 +63,85 @@ erDiagram
         string name
         string category "ToDo|InProgress|Done"
     }
+    StatusTransition {
+        uuid id PK
+        uuid typeId FK
+        uuid fromStatusId FK
+        uuid toStatusId FK
+    }
     WorkItem {
         uuid id PK
+        uuid projectId FK
+        uuid typeId FK
+        uuid statusId FK
+        uuid sprintId FK
+        uuid parentId FK
+        uuid assignedToId FK
+        uuid createdById FK
         int number
-        uuid type FK 
-        uuid assignedTo FK
-        uuid createdBy FK
-        uuid project FK
-        uuid status FK
-        uuid sprint FK
-        uuid parent FK
-
         string title
         string description
-        int points
-    }
-    WorkItemRel {
-      uuid id PK
-      uuid source FK
-      uuid target FK
-      uuid type FK
-    }
-    WorkItemRelType {
-      uuid id PK
-      string name
-      string inverseName
+        decimal points
     }
     WorkItemField {
         uuid id PK
-        uuid type FK
-        uuid workItem FK
-        json value
+        uuid workItemId FK
+        uuid fieldId FK
+        string valueText
+        decimal valueNumber
+        datetime valueDate
+        bool valueBool
+        uuid valueOptionId FK
+        uuid valueUserId FK
     }
-    StatusTransition {
+    WorkItemRel {
         uuid id PK
-        uuid tplWorkItem FK
-        uuid from FK
-        uuid to FK
+        uuid typeId FK
+        uuid sourceId FK
+        uuid targetId FK
+    }
+    WorkItemRelType {
+        uuid id PK
+        string name
+        string inverseName
     }
     Sprint {
         uuid id PK
-        uuid project FK
+        uuid projectId FK
         string name
-        date start
-        date end
-        int capacity
+        date startDate
+        date endDate
+        decimal capacity
     }
 
-    User ||--o{ WorkItem: creates
-    User |o--o{ WorkItem: isAssignedTo
-
-    Project }o--o{ TplWorkItem: uses 
-    Project ||--o{ Sprint: has 
-    Project ||--o{ WorkItem: has
+    Project }o--o{ TplWorkItem : uses
+    Project ||--o{ Sprint : has
+    Project ||--o{ WorkItem : has
 
     TplWorkItem ||--o{ TplWorkItemField : has
     TplWorkItem }o--o{ TplWorkItemStatus : uses
     TplWorkItem ||--o{ StatusTransition : allows
-    TplWorkItem ||--o{ WorkItem : has
-
-    TplWorkItemField ||--o{ TplWorkItemFieldOption : allows
-    TplWorkItemStatus ||--o{ WorkItem : has
-    WorkItem ||--o{ WorkItemField : has
-    WorkItem }o--|o Sprint : isOn
-
+    TplWorkItem ||--o{ WorkItem : "type of"
     TplWorkItemStatus ||--o{ TplWorkItem : "initial status of"
-    
-    TplWorkItemField ||--o{ WorkItemField : has
+    TplWorkItemField ||--o{ TplWorkItemFieldOption : allows
 
-    StatusTransition }o--|| TplWorkItemStatus: allowsFrom
-    StatusTransition }o--|| TplWorkItemStatus: allowsTo
+    StatusTransition }o--|| TplWorkItemStatus : "from"
+    StatusTransition }o--|| TplWorkItemStatus : "to"
 
-    WorkItemRel }o--|| WorkItem: source
-    WorkItemRel }o--|| WorkItem: target
-    WorkItemRel }o--|| WorkItemRelType: is
+    TplWorkItemStatus ||--o{ WorkItem : "status of"
+    Sprint |o--o{ WorkItem : includes
+    WorkItem |o--o{ WorkItem : "parent of"
+    User |o--o{ WorkItem : "assigned to"
+    User ||--o{ WorkItem : creates
+
+    WorkItem ||--o{ WorkItemField : has
+    TplWorkItemField ||--o{ WorkItemField : "value of"
+    TplWorkItemFieldOption |o--o{ WorkItemField : "selected in"
+    User |o--o{ WorkItemField : "selected in"
+
+    WorkItemRelType ||--o{ WorkItemRel : "type of"
+    WorkItem ||--o{ WorkItemRel : "source of"
+    WorkItem ||--o{ WorkItemRel : "target of"
 ```
 
 ## Conventions
