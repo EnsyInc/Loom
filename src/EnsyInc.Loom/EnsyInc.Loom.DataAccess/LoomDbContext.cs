@@ -23,6 +23,8 @@ public sealed class LoomDbContext : DbContext
 
     public DbSet<WorkItemTypeStatusEntity> WorkItemTypeStatuses { get; init; }
 
+    public DbSet<UserEntity> Users { get; init; }
+
     public LoomDbContext(DbContextOptions<LoomDbContext> options) : base(options)
     {
         ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
@@ -40,5 +42,6 @@ public sealed class LoomDbContext : DbContext
         modelBuilder.Entity<StatusTransitionEntity>().Configure();
         modelBuilder.Entity<ProjectWorkItemTypeEntity>().Configure();
         modelBuilder.Entity<WorkItemTypeStatusEntity>().Configure();
+        modelBuilder.Entity<UserEntity>().Configure();
     }
 }
