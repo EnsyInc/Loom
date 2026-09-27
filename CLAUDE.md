@@ -2,7 +2,7 @@
 
 Backend for Loom, a schema-driven work tracker: work item types, statuses, and relationships are data the user defines, not hardcoded concepts. It is **single-tenant** — there is no organization/tenant concept. See [docs/high-level-design.md](docs/high-level-design.md) for the design.
 
-**Implemented:** `Project` (CRUD at `/projects`), end to end — entity, repo, service, controller, migration, tests. **Designed but not built:** templates, work items, relationships, sprints, saved queries, Microsoft Entra ID auth, and the MCP layer.
+**Implemented:** `Project` (CRUD at `/projects`), end to end — entity, repo, service, controller, migration, tests. **Designed but not built:** work item types, work items, relationships, sprints, saved queries, Microsoft Entra ID auth, and the MCP layer.
 
 Loom is modeled on the sibling repo `../Enclave` (EnsyInc.Enclave). When unsure how something should be done, look at how Enclave does it — but copy its conventions, not its domain.
 
