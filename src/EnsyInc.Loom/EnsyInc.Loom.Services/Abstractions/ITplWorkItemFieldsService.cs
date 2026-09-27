@@ -16,7 +16,7 @@ public interface ITplWorkItemFieldsService
     /// Updates the field's label, required flag, and default value. Its key
     /// and data type are immutable after creation.
     /// </summary>
-    public Task<Result<TplWorkItemField>> UpdateField(TplWorkItemField field, CancellationToken ct);
+    public Task<Result<TplWorkItemField>> UpdateField(Guid id, string label, bool required, string? defaultValue, CancellationToken ct);
 
     public Task<Result> SoftDeleteField(Guid id, CancellationToken ct);
 }

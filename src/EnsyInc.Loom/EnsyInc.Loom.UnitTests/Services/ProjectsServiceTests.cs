@@ -15,11 +15,12 @@ namespace EnsyInc.Loom.UnitTests.Services;
 public sealed class ProjectsServiceTests
 {
     private readonly Mock<IProjectRepo> _projectRepoMock = new();
+    private readonly Mock<IProjectWorkItemTypeRepo> _projectTypeRepoMock = new();
     private readonly ProjectsService _sut;
 
     public ProjectsServiceTests()
     {
-        _sut = new ProjectsService(_projectRepoMock.Object);
+        _sut = new ProjectsService(_projectRepoMock.Object, _projectTypeRepoMock.Object);
     }
 
     private static ProjectEntity CreateEntity(Guid? id = null, string name = "Roadmap")

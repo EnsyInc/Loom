@@ -19,7 +19,7 @@ public interface ITplWorkItemFieldOptionsService
     /// Updates the option's label and rank. Its value is immutable after
     /// creation.
     /// </summary>
-    public Task<Result<TplWorkItemFieldOption>> UpdateOption(TplWorkItemFieldOption option, CancellationToken ct);
+    public Task<Result<TplWorkItemFieldOption>> UpdateOption(Guid id, string label, int rank, CancellationToken ct);
 
     public Task<Result> SoftDeleteOption(Guid id, CancellationToken ct);
 }

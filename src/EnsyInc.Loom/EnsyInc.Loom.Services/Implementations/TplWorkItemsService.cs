@@ -10,7 +10,11 @@ using EnsyNet.DataAccess.Abstractions.Errors;
 
 namespace EnsyInc.Loom.Services.Implementations;
 
-internal sealed class TplWorkItemsService(ITplWorkItemRepo typeRepo, IWorkItemTypeStatusRepo typeStatusRepo, IProjectWorkItemTypeRepo projectTypeRepo) : ITplWorkItemsService
+internal sealed class TplWorkItemsService(
+    ITplWorkItemRepo typeRepo,
+    IWorkItemTypeStatusRepo typeStatusRepo,
+    IProjectWorkItemTypeRepo projectTypeRepo,
+    IStatusTransitionRepo transitionRepo) : ITplWorkItemsService
 {
     public async Task<Result<IEnumerable<TplWorkItem>>> ListTypes(CancellationToken ct)
     {
@@ -135,6 +139,22 @@ internal sealed class TplWorkItemsService(ITplWorkItemRepo typeRepo, IWorkItemTy
                 DeleteOperationFailedError => Result.Ok(),
                 _ => Result.FromError(new UnexpectedError()),
             };
+        }
+
+        // Best-effort, non-atomic across the TplWorkItem, WorkItemTypeStatus, and StatusTransition
+        // repos: if either of these fails after the type delete above already succeeded, its
+        // status/transition links survive, which would incorrectly keep blocking those statuses
+        // from being deleted as still "in use".
+        var transitionsResult = await transitionRepo.SoftDelete(t => t.TypeId == id, ct);
+        if (transitionsResult.HasError && transitionsResult.Error is not BulkDeleteOperationFailedError)
+        {
+            return Result.FromError(new UnexpectedError());
+        }
+
+        var statusLinksResult = await typeStatusRepo.SoftDelete(l => l.TypeId == id, ct);
+        if (statusLinksResult.HasError && statusLinksResult.Error is not BulkDeleteOperationFailedError)
+        {
+            return Result.FromError(new UnexpectedError());
         }
 
         return Result.Ok();

@@ -65,19 +65,19 @@ internal sealed class TplWorkItemFieldsService(
         return Result.Ok(result.Data.ToCoreModel());
     }
 
-    public async Task<Result<TplWorkItemField>> UpdateField(TplWorkItemField field, CancellationToken ct)
+    public async Task<Result<TplWorkItemField>> UpdateField(Guid id, string label, bool required, string? defaultValue, CancellationToken ct)
     {
-        var existing = await GetField(field.Id, ct);
+        var existing = await GetField(id, ct);
         if (existing.HasError)
         {
             return Result.FromError<TplWorkItemField>(existing.Error);
         }
 
-        var updateResult = await fieldRepo.Update(field.Id, updates =>
+        var updateResult = await fieldRepo.Update(id, updates =>
         {
-            updates.AddUpdate(f => f.Label, _ => field.Label);
-            updates.AddUpdate(f => f.Required, _ => field.Required);
-            updates.AddUpdate(f => f.DefaultValue, _ => field.DefaultValue);
+            updates.AddUpdate(f => f.Label, _ => label);
+            updates.AddUpdate(f => f.Required, _ => required);
+            updates.AddUpdate(f => f.DefaultValue, _ => defaultValue);
         }, ct);
 
         if (updateResult.HasError)
@@ -89,7 +89,7 @@ internal sealed class TplWorkItemFieldsService(
             };
         }
 
-        return Result.Ok(existing.Data with { Label = field.Label, Required = field.Required, DefaultValue = field.DefaultValue, UpdatedAt = DateTime.UtcNow });
+        return Result.Ok(existing.Data with { Label = label, Required = required, DefaultValue = defaultValue, UpdatedAt = DateTime.UtcNow });
     }
 
     public async Task<Result> SoftDeleteField(Guid id, CancellationToken ct)

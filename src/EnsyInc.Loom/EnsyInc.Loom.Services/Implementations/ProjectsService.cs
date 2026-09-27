@@ -10,7 +10,7 @@ using EnsyNet.DataAccess.Abstractions.Errors;
 
 namespace EnsyInc.Loom.Services.Implementations;
 
-internal sealed class ProjectsService(IProjectRepo projectRepo) : IProjectsService
+internal sealed class ProjectsService(IProjectRepo projectRepo, IProjectWorkItemTypeRepo projectTypeRepo) : IProjectsService
 {
     public async Task<Result<IEnumerable<Project>>> ListProjects(CancellationToken ct)
     {
@@ -79,6 +79,14 @@ internal sealed class ProjectsService(IProjectRepo projectRepo) : IProjectsServi
             };
         }
 
-        return Result.Ok();
+        // Best-effort, non-atomic across the Project and ProjectWorkItemType repos (BaseRepository
+        // exposes no cross-repository transaction): if this fails after the project delete above
+        // already succeeded, the project is gone but its opt-in links remain, which still blocks
+        // deleting any work item type it used.
+        var linksResult = await projectTypeRepo.SoftDelete(l => l.ProjectId == id, ct);
+
+        return linksResult.HasError && linksResult.Error is not BulkDeleteOperationFailedError
+            ? Result.FromError(new UnexpectedError())
+            : Result.Ok();
     }
 }

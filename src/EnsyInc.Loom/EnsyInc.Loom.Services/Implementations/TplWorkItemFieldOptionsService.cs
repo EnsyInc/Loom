@@ -51,9 +51,9 @@ internal sealed class TplWorkItemFieldOptionsService(ITplWorkItemFieldOptionRepo
         return Result.Ok(result.Data.ToCoreModel());
     }
 
-    public async Task<Result<TplWorkItemFieldOption>> UpdateOption(TplWorkItemFieldOption option, CancellationToken ct)
+    public async Task<Result<TplWorkItemFieldOption>> UpdateOption(Guid id, string label, int rank, CancellationToken ct)
     {
-        var existingResult = await optionRepo.GetById(option.Id, ct);
+        var existingResult = await optionRepo.GetById(id, ct);
         if (existingResult.HasError)
         {
             return existingResult.Error switch
@@ -63,10 +63,10 @@ internal sealed class TplWorkItemFieldOptionsService(ITplWorkItemFieldOptionRepo
             };
         }
 
-        var updateResult = await optionRepo.Update(option.Id, updates =>
+        var updateResult = await optionRepo.Update(id, updates =>
         {
-            updates.AddUpdate(o => o.Label, _ => option.Label);
-            updates.AddUpdate(o => o.Rank, _ => option.Rank);
+            updates.AddUpdate(o => o.Label, _ => label);
+            updates.AddUpdate(o => o.Rank, _ => rank);
         }, ct);
 
         if (updateResult.HasError)
@@ -78,7 +78,7 @@ internal sealed class TplWorkItemFieldOptionsService(ITplWorkItemFieldOptionRepo
             };
         }
 
-        return Result.Ok(existingResult.Data.ToCoreModel() with { Label = option.Label, Rank = option.Rank, UpdatedAt = DateTime.UtcNow });
+        return Result.Ok(existingResult.Data.ToCoreModel() with { Label = label, Rank = rank, UpdatedAt = DateTime.UtcNow });
     }
 
     public async Task<Result> SoftDeleteOption(Guid id, CancellationToken ct)
